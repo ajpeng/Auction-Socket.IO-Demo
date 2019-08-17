@@ -1,0 +1,16 @@
+{
+  "name": "auction",
+  "version": "1.0.0",
+  "description": "Auction Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "author": "Alex Peng",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^1.19.1",
+    "uuid": "^3.3.2"
+  }
+}
