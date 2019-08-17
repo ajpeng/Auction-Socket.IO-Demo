@@ -18,12 +18,57 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+    <script type="text/javascript" src="auction.js"></script>
 </head>
 
 <body>
-
+    <form>
+        <div class="col">
+            <div class="card w-100" style="width: 18rem;">
+                <div class="card-body">
+                    <h1 class="card-title" style="text-align: center">Item to auction</h1>
+                    <div class="card-text">
+                        <div class="col-1">
+                        </div>
+                        <div class="col-11">
+                            <div class="form-group m-3">
+                                <div class="row">
+                                    <div class="form-group w-100">
+                                        <label for="itemName">Item Name</label>
+                                        <input type="text" class="form-control" id="itemName">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group w-100">
+                                        <label for="itemDescription">Description</label>
+                                        <textarea class="form-control" name="description" id="itemDescription" cols="30"
+                                            rows="10"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group w-100">
+                                        <label for="startingBid">Starting Bid</label>
+                                        <input type="text" class="form-control" id="startingBid">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group w-100">
+                                        <label for="auctionDuation">Duration of auction in seconds.</label>
+                                        <input type="text" class="form-control" id="auctionDuation">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-primary" type="button" id="startAuction">Start Auction</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- <br>
     <div class="container">
-
         <form class="form-signin">
             <h2 class="form-signin-heading">Please sign in</h2>
             <label for="inputEmail" class="sr-only">Email address</label>
@@ -38,7 +83,7 @@
             <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         </form>
 
-    </div> <!-- /container -->
+    </div> /container -->
 </body>
 
 </html>

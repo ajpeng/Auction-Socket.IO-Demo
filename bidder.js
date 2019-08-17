@@ -1,12 +1,9 @@
-class Bidder {
-    constructor(name) {
-        this.name = name;
-    }
-
-    addBid(amount) {
-        this.bid = amount;
-        console.log(`${this.name} is setting a bid for ${this.bid}`);
-    }
+function reqListener() {
+    console.log(this.response);
 }
-
-module.exports = Bidder;
+// Creating request variable
+var request = new XMLHttpRequest();
+// Setting get request to check if it's the first and only auction page
+request.addEventListener("load", reqListener);
+request.open('GET', 'localhost:4200/auction_status', true);
+request.send();

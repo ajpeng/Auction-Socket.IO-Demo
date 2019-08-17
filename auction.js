@@ -1,9 +1,16 @@
-function reqListener() {
-    console.log(this.response);
+// making sure the document is loaded before starting script
+window.onload = function () {
+    document.getElementById('startAuction').addEventListener('click', loadText);
+
+    function loadText() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'sample.json', true);
+        xhr.onload = function () {
+            if (this.status == 200) {
+                console.log(this.responseText);
+            }
+        }
+        // sends req
+        xhr.send();
+    }
 }
-// Creating request variable
-var request = new XMLHttpRequest();
-// Setting get request to check if it's the first and only auction page
-request.addEventListener("load", reqListener);
-request.open('GET', 'localhost:4200/auction_status', true);
-request.send();
