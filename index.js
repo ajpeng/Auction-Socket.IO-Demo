@@ -1,31 +1,51 @@
-const http = require('http');
-const path = require('path');
-const fs = require('fs');
+// Setting upserver for listening
+const app = require('express')();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const Models = require('./models.js');
 
-//  Create server obj
-const server = http.createServer((req, res) => {
-    let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-    console.log(filePath)
-    if (req.url === '/bidder') {
-        // goToPage(req, res);
-    } else if (req.url === '/auction') {
-        // goToPage(req, res);
-    }
+const bidsArr = [];
+
+app.get('/', function (req, res) {
+    res.sendFile(__dirname + '/bidder.html');
 });
 
-function goToPage(req, res) {
-    fs.readFile(
-        path.join(__dirname, 'public', req.url),
-        (err, content) => {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('wow');
-            res.end();
-        }
-    );
-}
-
-server.listen(4200, () => {
-    console.log(`Auction page is at http://localhost:4200/auction `);
-    console.log(`Bidder page is at http://localhost:4200/bidder `);
+app.get('/bidder', function (req, res) {
+    res.sendFile(__dirname + '/bidder.html');
 });
+
+app.get('/auction', function (req, res) {
+    res.sendFile(__dirname + '/auction.html');
+});
+
+io.on('connection', function (socket) {
+    socket.on('newBid', function (msg) {
+        var newBidJson = JSON.stringify(msg)
+        console.log(`received : ${newBidJson}`);
+        var newBid = new Models.Bid(msg.name, msg.amount, msg.timestamp);
+        bidsArr.push(newBid);
+        io.emit('bidLeader', newBid);
+    });
+});
+
+http.listen(4200, function () {
+    console.log(`Starting server at port: ${process.env.PORT || 4200}`);
+});
+
+// io.on('connection', function (socket) {
+//     connections.push(socket);
+//     console.log(`A user has connected. There are currently ${connections.length} connected.`);
+//     socket.on('disconnect', function (data) {
+//         connections.splice(connections.indexOf(socket), 1)
+//         console.log(`A user has disconnected. There are currently ${connections.length} connected.`);
+//     })
+// });
+
+
+// io.on('connection', function (socket) {
+//     console.log('a user connected');
+//     socket.on('disconnect', function () {
+//         console.log('user disconnected');
+//     });
+// });
 

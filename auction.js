@@ -10,6 +10,9 @@ window.onload = function () {
                 console.log(this.responseText);
             }
         }
+        xhr.onerror() = function () {
+            console.log('Failing to get request')
+        }
         // sends req
         xhr.send();
     }

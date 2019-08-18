@@ -10,7 +10,9 @@
   "author": "Alex Peng",
   "license": "ISC",
   "devDependencies": {
+    "express": "^4.17.1",
     "nodemon": "^1.19.1",
+    "socket.io": "^2.2.0",
     "uuid": "^3.3.2"
   }
 }
