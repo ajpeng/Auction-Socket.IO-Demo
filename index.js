@@ -6,11 +6,15 @@ const Models = require('./models.js');
 
 const bidsArr = [];
 var usersCount = 0;
+var duration = 0;
 var timer = 0;
 const DIGITS_ONLY = /^\d+$/;
 const TWO_DECIMAL_FORMAT = /^\d+\.\d{2,2}$/
-var currentBidLeaderInCents = 0;
-let statingTimestamp;
+var currentWinningBidInCents = 0;
+var auctionCount = 0;
+var bidLeader;
+var winningBids = [];
+let startingTimestamp;
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/bidder.html');
 });
@@ -37,9 +41,12 @@ io.on('connection', function (socket) {
         if (isBidValid(newBid)) {
             bidsArr.push(newBid);
             if (isBiggerThanCurrenBid(newBid)) {
-                currentBidLeaderInCents = convertStrToCents(newBid.amount);
+                currentWinningBidInCents = convertStrToCents(newBid.amount);
+                bidLeader = newBid;
                 io.emit('bidLeader', newBid);
             }
+        } else {
+            console.log('Bid isnt valid');
         }
     });
 
@@ -47,22 +54,33 @@ io.on('connection', function (socket) {
     socket.on('itemToBid', function (msg) {
         console.log(`Auction started with : ${JSON.stringify(msg)}`);
         var itemToAuction = new Models.Item(msg.name, msg.description, msg.startingBid, msg.auctionDuration);
-        statingTimestamp = new Date().getTime();
-        timer = itemToAuction.duration;
+        startingTimestamp = new Date().getTime();
+        console.log(startingTimestamp);
+        timer = +itemToAuction.duration;
         if (DIGITS_ONLY.test(timer) && +timer > 0 // making sure the timer > 0
             && (DIGITS_ONLY.test(itemToAuction.startingBid) || TWO_DECIMAL_FORMAT.test(itemToAuction.startingBid))  // checking for valid starting bid
         ) {
             // converts string to bid in cents. 
-            currentBidLeaderInCents = convertStrToCents(itemToAuction.startingBid);
+            currentWinningBidInCents = convertStrToCents(itemToAuction.startingBid);
             io.emit('initAuction', itemToAuction);
+            duration = itemToAuction.duration;
             startTimer(itemToAuction.duration);
+            setTimeout(() => {
+                winningBids[auctionCount] = bidLeader;
+                console.log(JSON.stringify(winningBids));
+                io.emit('winningBid', winningBids);
+            }, itemToAuction.duration * 1000)
+
         }
     });
 
+    // Making sure the bid is sent while the acution is active
     function isBidValid(bid) {
         return (
             (DIGITS_ONLY.test(bid.amount) || TWO_DECIMAL_FORMAT.test(bid.amount)) &&
-            bid.name != 'SYSTEM' && bid.timestamp > 0);
+            bid.timestamp > 0 && bid.timestamp > startingTimestamp && bid.timestamp < (startingTimestamp + (duration * 1000)) &&
+            bid.name != 'SYSTEM'
+        );
     }
 
     function convertStrToCents(amount) {
@@ -70,16 +88,11 @@ io.on('connection', function (socket) {
     }
 
     function isBiggerThanCurrenBid(bid) {
-        return convertStrToCents(bid.amount) > currentBidLeaderInCents;
+        return convertStrToCents(bid.amount) > currentWinningBidInCents;
     }
 
     function startTimer() {
-        setInterval(function () {
-            if (timer >= 0) {
-                io.emit('timer', timer);
-                timer--;
-            };
-        }, 1000);
+        io.emit('timer', timer);
     }
 });
 

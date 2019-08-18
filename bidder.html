@@ -37,23 +37,13 @@
                     <div class="card w-100">
                         <div class="card-body">
                             <div class="card-title">
-                                <div class="alert alert-primary">
-                                    Online Bidders
-                                </div>
-                            </div>
-                            <ul class="list-group" id="users"></ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-2">
-                    <div class="card w-100">
-                        <div class="card-body">
-                            <div class="card-title">
                                 <div class="alert alert-secondary">
                                     Sold Listings
                                 </div>
                             </div>
-                            <ul class="list-group" id="users"></ul>
+                            <div class="card-container" id="soldListings">
+                                <p id="soldListings2"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -61,7 +51,7 @@
                     <div class="card w-100" style="width: 18rem;">
                         <div class="card-body">
                             <div class="alert alert-warning" role="alert">
-                                Time Remaining: <div id="timer"></div> seconds
+                                Time Remaining: <div id="timer"></div>
                             </div>
                             <h5 class="card-title">Item For Sale</h5>
                             <p class="card-text">
@@ -125,6 +115,19 @@
     <script>
         $(function () {
             var socket = io();
+            var timer = 0;
+            function startTimer() {
+                if (timer > 0) {
+                    var timeLeft = setInterval(function () {
+                        $("#timer").html(timer + ' seconds');
+                        timer--;
+                        if (timer <= 0) {
+                            clearInterval(timeLeft);
+                            $("#timer").html('Auction complete');
+                        }
+                    }, 1000)
+                }
+            }
             $('form').submit(function (e) {
                 // prevents the page from refreshing
                 e.preventDefault();
@@ -147,8 +150,31 @@
                 $('#bidHigh').html(msg.startingBid);
             });
 
+            socket.on('winningBid', function (msg) {
+                console.log(msg);
+                let soldListingStr = '';
+                msg.forEach((element, index) => {
+                    soldListingStr += (`
+                        <div class="card my-2">
+                            <div class="card-title" style="">Green Boat</div>
+                            <div class="card-body mx-1 px-0" style="text-align: left">
+                                <p>Sold to: ${msg[index].name} </p>
+                                <p>Winning bid: ${msg[index].amount} </p>
+                            </div>
+                        </div>
+                        <br>
+                    `);
+                });
+                console.log(soldListingStr);
+                $('#soldListings').html(soldListingStr);
+                // $('#soldListings').html('hello world');
+
+            });
+
             socket.on('timer', function (msg) {
-                $("#timer").html(msg);
+                console.log(msg);
+                timer = +msg;
+                startTimer(+msg);
             });
         });
     </script>

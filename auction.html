@@ -20,7 +20,7 @@
 </head>
 
 <body>
-    <form>
+    <form class="p-3 mx-auto flex-column">
         <div class="row">
 
             <div class="col-8">
@@ -71,9 +71,22 @@
                         <h1 class="card-title">Timer</h1>
                         <div class="h2">
                             <div class="badge badge-primary">
-                                <p id="timer"></p> seconds
+                                <p id="timer"></p>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="card w-100" style="text-align: center">
+                        <div class="card-title">
+                            <div class="alert alert-secondary">
+                                Sold Listings
+                            </div>
+                        </div>
+                        <ul class="list-group" id="soldItems">
+
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -83,6 +96,19 @@
     <script>
         $(function () {
             var socket = io();
+            var timer = 0;
+            function startTimer() {
+                if (timer > 0) {
+                    var timeLeft = setInterval(function () {
+                        $("#timer").html(timer + ' seconds');
+                        timer--;
+                        if (timer <= 0) {
+                            clearInterval(timeLeft);
+                            $("#timer").html('Auction complete');
+                        }
+                    }, 1000)
+                }
+            }
             $('form').submit(function (e) {
                 // prevents the page from refreshing
                 e.preventDefault();
@@ -95,7 +121,8 @@
                 $('#bidHigh').innerHtml = msg.amount;
             });
             socket.on('timer', function (msg) {
-                $("#timer").html(msg);
+                timer = +msg;
+                startTimer(+msg);
             });
         });    
     </script>
