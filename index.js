@@ -5,6 +5,8 @@ const io = require('socket.io')(http);
 const Models = require('./models.js');
 
 const bidsArr = [];
+var usersCount = 0;
+var timer = 0;
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/bidder.html');
@@ -19,33 +21,40 @@ app.get('/auction', function (req, res) {
 });
 
 io.on('connection', function (socket) {
+    usersCount = usersCount + 1;
+
+    socket.on('disconnect', function () {
+        usersCount = usersCount - 1;
+    });
+
+    // pushing bids to array and emitting if new bid is higher.
     socket.on('newBid', function (msg) {
-        var newBidJson = JSON.stringify(msg)
-        console.log(`received : ${newBidJson}`);
+        console.log(`received : ${JSON.stringify(msg)}`);
         var newBid = new Models.Bid(msg.name, msg.amount, msg.timestamp);
         bidsArr.push(newBid);
         io.emit('bidLeader', newBid);
     });
+
+    socket.on('itemToBid', function (msg) {
+        console.log(`Auction started with : ${JSON.stringify(msg)}`);
+        var itemToAuction = new Models.Item(msg.name, msg.description, msg.startingBid, msg.auctionDuration);
+        timer = msg.auctionDuration;
+        if (/^\d+$/.test(timer) && +timer > 0) {
+            io.emit('initAuction', itemToAuction);
+            startTimer(msg.auctionDuration);
+        }
+    });
+
+    function startTimer(duration) {
+        setInterval(function () {
+            if (timer >= 0) {
+                io.emit('timer', timer);
+                timer--;
+            };
+        }, 1000);
+    }
 });
 
 http.listen(4200, function () {
     console.log(`Starting server at port: ${process.env.PORT || 4200}`);
 });
-
-// io.on('connection', function (socket) {
-//     connections.push(socket);
-//     console.log(`A user has connected. There are currently ${connections.length} connected.`);
-//     socket.on('disconnect', function (data) {
-//         connections.splice(connections.indexOf(socket), 1)
-//         console.log(`A user has disconnected. There are currently ${connections.length} connected.`);
-//     })
-// });
-
-
-// io.on('connection', function (socket) {
-//     console.log('a user connected');
-//     socket.on('disconnect', function () {
-//         console.log('user disconnected');
-//     });
-// });
-

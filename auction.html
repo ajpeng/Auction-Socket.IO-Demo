@@ -17,50 +17,63 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
-    <script type="text/javascript" src="auction.js"></script>
 </head>
 
 <body>
     <form>
-        <div class="col">
-            <div class="card w-100" style="width: 18rem;">
-                <div class="card-body">
-                    <h1 class="card-title" style="text-align: center">Item to auction</h1>
-                    <div class="card-text">
-                        <div class="col-1">
-                        </div>
-                        <div class="col-11">
-                            <div class="form-group m-3">
-                                <div class="row">
-                                    <div class="form-group w-100">
-                                        <label for="itemName">Item Name</label>
-                                        <input type="text" class="form-control" id="itemName">
+        <div class="row">
+
+            <div class="col-8">
+                <div class="card w-100" style="width: 18rem;">
+                    <div class="card-body">
+                        <h1 class="card-title" style="text-align: center">Item to auction</h1>
+                        <form id="bidForm" action="">
+                            <div class="col-11">
+                                <div class="form-group m-3">
+                                    <div class="row">
+                                        <div class="form-group w-100">
+                                            <label for="name">Item Name</label>
+                                            <input type="text" class="form-control" id="name">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="form-group w-100">
-                                        <label for="itemDescription">Description</label>
-                                        <textarea class="form-control" name="description" id="itemDescription" cols="30"
-                                            rows="10"></textarea>
+                                    <div class="row">
+                                        <div class="form-group w-100">
+                                            <label for="description">Description</label>
+                                            <textarea class="form-control" name="description" id="description" cols="10"
+                                                rows="3"></textarea>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="form-group w-100">
-                                        <label for="startingBid">Starting Bid</label>
-                                        <input type="text" class="form-control" id="startingBid">
+                                    <div class="row">
+                                        <div class="form-group w-100">
+                                            <label for="startingBid">Starting Bid</label>
+                                            <input type="text" class="form-control" id="startingBid">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="form-group w-100">
-                                        <label for="auctionDuation">Duration of auction in seconds.</label>
-                                        <input type="text" class="form-control" id="auctionDuation">
+                                    <div class="row">
+                                        <div class="form-group w-100">
+                                            <label for="auctionDuration">Duration of Auction(s)</label>
+                                            <input type="text" class="form-control" id="auctionDuration">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <button type="placeBid" class="btn btn-primary" id="startAuction">Start
+                                            Auction</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
-                    <div class="col">
-                        <button class="btn btn-primary" type="button" id="startAuction">Start Auction</button>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="row">
+                    <div class="card w-100" style="text-align: center">
+                        <h1 class="card-title">Timer</h1>
+                        <div class="h2">
+                            <div class="badge badge-primary">
+                                <p id="timer"></p> seconds
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,7 +81,23 @@
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io();
+        $(function () {
+            var socket = io();
+            $('form').submit(function (e) {
+                // prevents the page from refreshing
+                e.preventDefault();
+                const itemToBid = { 'name': $('#name').val(), 'description': $('#description').val(), 'startingBid': $('#startingBid').val(), 'auctionDuration': $('#auctionDuration').val() };
+                socket.emit('itemToBid', itemToBid);
+                return false;
+            });
+            socket.on('bidLeader', function (msg) {
+                $('#bidLeader').innerHtml = msg.name;
+                $('#bidHigh').innerHtml = msg.amount;
+            });
+            socket.on('timer', function (msg) {
+                $("#timer").html(msg);
+            });
+        });    
     </script>
 </body>
 

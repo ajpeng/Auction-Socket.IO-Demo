@@ -12,6 +12,16 @@ class Bid {
     }
 }
 
+class Item {
+    constructor(itemName, description, startingBid, duration) {
+        this.itemName = itemName;
+        this.description = description;
+        this.startingBid = startingBid;
+        this.duration = duration;
+    }
+}
+
 module.exports = {
-    Bid: Bid
+    Bid: Bid,
+    Item: Item
 }
