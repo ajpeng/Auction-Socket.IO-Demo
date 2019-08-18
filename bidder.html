@@ -25,86 +25,78 @@
         <main role="main" class="inner cover">
             <h1 class="cover-heading">Welcome to the auction!!!</h1>
             <br>
-            <div class="row" style="text-align: center; align-content: center">
-                <div class="col">
-                    <div class="alert alert-primary" role="alert">
-                        Waiting for the auction to start.
+            <div id="hiddenAuctionContainer">
+                <div class="row" style="text-align: center; align-content: center">
+                    <div class="col">
+                        <div class="alert alert-primary" role="alert">
+                            Waiting for the auction to start.
+                        </div>
                     </div>
+                </div>
+                <div class="row" id="soldListings">
                 </div>
             </div>
-            <div class="row">
-                <div class="col-2">
-                    <div class="card w-100">
-                        <div class="card-body">
-                            <div class="card-title">
-                                <div class="alert alert-secondary">
-                                    Sold Listings
+            <div id="auctionContainer">
+                <div class="row">
+                    <div class="col">
+                        <div class="card w-100" style="width: 18rem;">
+                            <div class="card-body">
+                                <div class="alert alert-warning" role="alert">
+                                    Time Remaining: <div id="timer"></div>
                                 </div>
-                            </div>
-                            <div class="card-container" id="soldListings">
-                                <p id="soldListings2"></p>
+                                <h5 class="card-title">Item For Sale</h5>
+                                <p class="card-text">
+                                    <div class="col">
+                                        <div class="row">
+                                            Name: &nbsp;<div id="itemName"></div>
+                                        </div>
+                                        <div class="row">
+                                            Description: &nbsp;<div id="description"></div>
+                                        </div>
+                                        <div class="row">
+                                            Current bid leader: &nbsp;<div id="bidLeader"></div>
+                                        </div>
+                                        <div class="row">
+                                            Current bid amount: &nbsp;$<div id="bidHigh"></div>
+                                        </div>
+                                    </div>
+                                </p>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col">
-                    <div class="card w-100" style="width: 18rem;">
-                        <div class="card-body">
-                            <div class="alert alert-warning" role="alert">
-                                Time Remaining: <div id="timer"></div>
+                    <div class="col">
+                        <div class="card w-100" style="width: 18rem">
+                            <div class="card-body">
+                                <h5 class="card-title">Bidding</h5>
+                                <p class="card-text">
+                                    <div class="col">
+                                        <form id="bidForm" action="">
+                                            <div class="row">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="bidderNameSpan">Name</span>
+                                                    </div>
+                                                    <input type="text" class="form-control" id="bidName"
+                                                        aria-describedby="bidderNameSpan">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">$</span>
+                                                    </div>
+                                                    <input type="text" class="form-control" id="bidAmount"
+                                                        aria-label="bid amount"
+                                                        placeholder="Input value in dollar.cent (5.99) or just dollars (5)">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <button type="placeBid" class="btn btn-success">Place a bid</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </p>
                             </div>
-                            <h5 class="card-title">Item For Sale</h5>
-                            <p class="card-text">
-                                <div class="col">
-                                    <div class="row">
-                                        Name: &nbsp;<div id="itemName"></div>
-                                    </div>
-                                    <div class="row">
-                                        Description: &nbsp;<div id="description"></div>
-                                    </div>
-                                    <div class="row">
-                                        Current bid leader: &nbsp;<div id="bidLeader"></div>
-                                    </div>
-                                    <div class="row">
-                                        Current bid amount: &nbsp;$<div id="bidHigh"></div>
-                                    </div>
-                                </div>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card w-100" style="width: 18rem">
-                        <div class="card-body">
-                            <h5 class="card-title">Bidding</h5>
-                            <p class="card-text">
-                                <div class="col">
-                                    <form id="bidForm" action="">
-                                        <div class="row">
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="bidderNameSpan">Name</span>
-                                                </div>
-                                                <input type="text" class="form-control" id="bidName"
-                                                    aria-describedby="bidderNameSpan">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
-                                                </div>
-                                                <input type="text" class="form-control" id="bidAmount"
-                                                    aria-label="bid amount"
-                                                    placeholder="Input value in dollar.cent (5.99) or just dollars (5)">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <button type="placeBid" class="btn btn-success">Place a bid</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -116,6 +108,8 @@
         $(function () {
             var socket = io();
             var timer = 0;
+            $('#auctionContainer').hide();
+
             function startTimer() {
                 if (timer > 0) {
                     var timeLeft = setInterval(function () {
@@ -124,6 +118,7 @@
                         if (timer <= 0) {
                             clearInterval(timeLeft);
                             $("#timer").html('Auction complete');
+                            clearForm();
                         }
                     }, 1000)
                 }
@@ -141,38 +136,39 @@
                 $('#bidHigh').html(msg.amount);
             });
 
+            //
             socket.on('initAuction', function (msg) {
-                console.log('initializing auction');
-                console.log(msg);
+                $('#hiddenAuctionContainer').hide();
+                $('#auctionContainer').show();
                 $('#itemName').html(msg.itemName);
                 $('#description').html(msg.description);
                 $('#bidLeader').html('SYSTEM');
                 $('#bidHigh').html(msg.startingBid);
+
             });
 
+            // When the winning is decide
             socket.on('winningBid', function (msg) {
-                console.log(msg);
-                let soldListingStr = '';
-                msg.forEach((element, index) => {
-                    soldListingStr += (`
-                        <div class="card my-2">
-                            <div class="card-title" style="">Green Boat</div>
-                            <div class="card-body mx-1 px-0" style="text-align: left">
-                                <p>Sold to: ${msg[index].name} </p>
-                                <p>Winning bid: ${msg[index].amount} </p>
+                let soldListingStr = `
+                    <div class="col">
+                        <div class="alert alert-primary" role="alert">
+                            <div class="card my-2">
+                                <div class="card-title" style="">${msg.itemName}</div>
+                                <div class="card-body mx-1 px-0" style="text-align: left">
+                                    <p>Sold to: ${msg.name} </p>
+                                    <p>Winning bid:$ ${msg.amount} </p>
+                                </div>
                             </div>
+                            <br>
                         </div>
-                        <br>
-                    `);
-                });
-                console.log(soldListingStr);
+                    </div>
+                    `;
                 $('#soldListings').html(soldListingStr);
-                // $('#soldListings').html('hello world');
-
+                $('#hiddenAuctionContainer').show();
+                $('#auctionContainer').hide();
             });
 
             socket.on('timer', function (msg) {
-                console.log(msg);
                 timer = +msg;
                 startTimer(+msg);
             });

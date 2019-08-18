@@ -20,9 +20,13 @@
 </head>
 
 <body>
-    <form class="p-3 mx-auto flex-column">
-        <div class="row">
-
+    <form class="p-3 mx-auto flex-column" id="auctionForm">
+        <div class="row" id="duplicateAuctioneerWarning">
+            <div class="alert alert-danger w-100" style="text-align: center" role="alert">
+                There is already an auctioneer page connected. Please close the connection and try again.
+            </div>
+        </div>
+        <div class="row" id="auctionContent">
             <div class="col-8">
                 <div class="card w-100" style="width: 18rem;">
                     <div class="card-body">
@@ -84,9 +88,8 @@
                                 Sold Listings
                             </div>
                         </div>
-                        <ul class="list-group" id="soldItems">
-
-                        </ul>
+                        <div class="card-container" id="soldListings">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -97,15 +100,17 @@
         $(function () {
             var socket = io();
             var timer = 0;
+            var x = socket.emit('newConnection', 'auctioneer');
+
             function startTimer() {
                 if (timer > 0) {
                     var timeLeft = setInterval(function () {
                         $("#timer").html(timer + ' seconds');
-                        timer--;
-                        if (timer <= 0) {
+                        if (timer < 0) {
                             clearInterval(timeLeft);
                             $("#timer").html('Auction complete');
                         }
+                        timer--;
                     }, 1000)
                 }
             }
@@ -116,6 +121,18 @@
                 socket.emit('itemToBid', itemToBid);
                 return false;
             });
+
+            // show warning and hide content if there's already a auction page connected
+            socket.on('multipleAuctioneer', function (msg) {
+                if (msg) {
+                    $('#duplicateAuctioneerWarning').show();
+                    $('#auctionContent').hide();
+                } else {
+                    $('#duplicateAuctioneerWarning').hide();
+                    $('#auctionContent').show();
+                }
+            });
+
             socket.on('bidLeader', function (msg) {
                 $('#bidLeader').innerHtml = msg.name;
                 $('#bidHigh').innerHtml = msg.amount;
@@ -124,6 +141,32 @@
                 timer = +msg;
                 startTimer(+msg);
             });
+
+            socket.on('winningBids', function (msg) {
+                if (msg && msg.length > 0) {
+                    let soldListingStr = '';
+                    msg.forEach((element, index) => {
+                        if (msg[index] && msg[index].itemName && msg[index].name && msg[index].amount) {
+                            soldListingStr += (`
+                                <div class="card my-2">
+                                    <div class="card-title" style="">${msg[index].itemName}</div>
+                                    <div class="card-body mx-1 px-0" style="text-align: left">
+                                        <p>Sold to: ${msg[index].name} </p>
+                                        <p>Winning bid:$ ${msg[index].amount} </p>
+                                    </div>
+                                </div>
+                                <br>
+                            `);
+                        }
+                    });
+                    $('#soldListings').html(soldListingStr);
+                    clearForm();
+                }
+            });
+
+            function clearForm() {
+                $("#auctionForm").trigger('reset');
+            }
         });    
     </script>
 </body>

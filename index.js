@@ -11,8 +11,10 @@ var timer = 0;
 const DIGITS_ONLY = /^\d+$/;
 const TWO_DECIMAL_FORMAT = /^\d+\.\d{2,2}$/
 var currentWinningBidInCents = 0;
-var auctionCount = 0;
+var auctionCount = -1;
+var auctioneersConnected = 0;
 var bidLeader;
+var itemToAuction;
 var winningBids = [];
 let startingTimestamp;
 app.get('/', function (req, res) {
@@ -20,6 +22,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/bidder', function (req, res) {
+
     res.sendFile(__dirname + '/bidder.html');
 });
 
@@ -30,13 +33,25 @@ app.get('/auction', function (req, res) {
 io.on('connection', function (socket) {
     usersCount = usersCount + 1;
 
-    socket.on('disconnect', function () {
-        usersCount = usersCount - 1;
+    socket.on('newConnection', function (msg) {
+        if (msg === 'auctioneer') {
+            auctioneersConnected++;
+            socket.auctioneerId = auctioneersConnected;
+            socket.userName = msg;
+            console.log(socket.auctioneerId);
+            socket.emit('multipleAuctioneer', socket.auctioneerId === 1 ? false : true);
+        }
+    });
+
+    socket.on('disconnect', function (msg) {
+        if (socket.userName === 'auctioneer') {
+            auctioneersConnected--;
+        }
     });
 
     // pushing bids to array and emitting if new bid is higher.
     socket.on('newBid', function (msg) {
-        console.log(`received : ${JSON.stringify(msg)}`);
+        console.log(`Received bid with: ${JSON.stringify(msg)}`);
         var newBid = new Models.Bid(msg.name, msg.amount, msg.timestamp);
         if (isBidValid(newBid)) {
             bidsArr.push(newBid);
@@ -52,25 +67,37 @@ io.on('connection', function (socket) {
 
     // Initializing the conditions of the item for sale
     socket.on('itemToBid', function (msg) {
-        console.log(`Auction started with : ${JSON.stringify(msg)}`);
-        var itemToAuction = new Models.Item(msg.name, msg.description, msg.startingBid, msg.auctionDuration);
-        startingTimestamp = new Date().getTime();
-        console.log(startingTimestamp);
-        timer = +itemToAuction.duration;
-        if (DIGITS_ONLY.test(timer) && +timer > 0 // making sure the timer > 0
-            && (DIGITS_ONLY.test(itemToAuction.startingBid) || TWO_DECIMAL_FORMAT.test(itemToAuction.startingBid))  // checking for valid starting bid
-        ) {
-            // converts string to bid in cents. 
-            currentWinningBidInCents = convertStrToCents(itemToAuction.startingBid);
-            io.emit('initAuction', itemToAuction);
-            duration = itemToAuction.duration;
-            startTimer(itemToAuction.duration);
-            setTimeout(() => {
-                winningBids[auctionCount] = bidLeader;
-                console.log(JSON.stringify(winningBids));
-                io.emit('winningBid', winningBids);
-            }, itemToAuction.duration * 1000)
-
+        console.log(socket.auctioneerId);
+        // ensuring each field is filled and there is only one /auction page connected
+        if (msg && msg.name && msg.description && msg.startingBid && msg.auctionDuration && socket.auctioneerId === 1) {
+            console.log(`Auction started with : ${JSON.stringify(msg)}`);
+            itemToAuction = new Models.Item(msg.name, msg.description, msg.startingBid, msg.auctionDuration);
+            startingTimestamp = new Date().getTime();
+            timer = +itemToAuction.duration;
+            if (DIGITS_ONLY.test(timer) && +timer > 0 // making sure the timer > 0
+                && (DIGITS_ONLY.test(itemToAuction.startingBid) || TWO_DECIMAL_FORMAT.test(itemToAuction.startingBid))  // checking for valid starting bid
+            ) {
+                // converts string to bid in cents. 
+                currentWinningBidInCents = convertStrToCents(itemToAuction.startingBid);
+                io.emit('initAuction', itemToAuction);
+                duration = itemToAuction.duration;
+                startTimer(itemToAuction.duration);
+                // emitting the winning bid when duration of auction finishes
+                if (itemToAuction && itemToAuction.itemName) {
+                    setTimeout(() => {
+                        if (bidLeader && bidLeader.name && bidLeader.amount) {
+                            console.log('sending winning results');
+                            let winningBid = { 'itemName': itemToAuction.itemName, 'name': bidLeader.name, 'amount': bidLeader.amount };
+                            winningBids[auctionCount] = winningBid;
+                            // send current winning bid to bidder page
+                            io.emit('winningBid', winningBid);
+                            // send list of auctioned items to auction page
+                            io.emit('winningBids', winningBids);
+                        }
+                    }, itemToAuction.duration * 1000);
+                }
+            }
+            auctionCount++;
         }
     });
 
