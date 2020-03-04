@@ -133,15 +133,19 @@
                 }
             });
 
+            // Update with the current highest bid
             socket.on('bidLeader', function (msg) {
                 $('#bidLeader').innerHtml = msg.name;
                 $('#bidHigh').innerHtml = msg.amount;
             });
+
+            // Start the countdown
             socket.on('timer', function (msg) {
                 timer = +msg;
                 startTimer(+msg);
             });
 
+            // Show the list of items sold
             socket.on('winningBids', function (msg) {
                 if (msg && msg.length > 0) {
                     let soldListingStr = '';
@@ -164,6 +168,7 @@
                 }
             });
 
+            // Clears the item form 
             function clearForm() {
                 $("#auctionForm").trigger('reset');
             }

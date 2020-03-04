@@ -1,4 +1,4 @@
-// Setting upserver for listening
+// Setting up the server for listening
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
@@ -17,15 +17,17 @@ var bidLeader;
 var itemToAuction;
 var winningBids = [];
 let startingTimestamp;
+
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/bidder.html');
 });
 
+// Bidding page
 app.get('/bidder', function (req, res) {
-
     res.sendFile(__dirname + '/bidder.html');
 });
 
+// Auction page
 app.get('/auction', function (req, res) {
     res.sendFile(__dirname + '/auction.html');
 });
@@ -33,6 +35,7 @@ app.get('/auction', function (req, res) {
 io.on('connection', function (socket) {
     usersCount = usersCount + 1;
 
+    // Ensuring there is only one auctioneer
     socket.on('newConnection', function (msg) {
         if (msg === 'auctioneer') {
             auctioneersConnected++;
@@ -43,6 +46,7 @@ io.on('connection', function (socket) {
         }
     });
 
+    // If the auctioneer disconnects, allow another instance of the auction
     socket.on('disconnect', function (msg) {
         if (socket.userName === 'auctioneer') {
             auctioneersConnected--;
@@ -124,5 +128,7 @@ io.on('connection', function (socket) {
 });
 
 http.listen(4200, function () {
-    console.log(`Starting server at port: ${process.env.PORT || 4200}`);
+    // console.log(`Starting server at port: ${process.env.PORT || 4200}`);
+    console.log(`Visit http://localhost:${process.env.PORT || 4200}/auction for auction page`);
+    console.log(`Visit http://localhost:${process.env.PORT || 4200}/bidder for bidding page`);
 });

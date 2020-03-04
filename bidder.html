@@ -110,6 +110,7 @@
             var timer = 0;
             $('#auctionContainer').hide();
 
+            // starts the timer
             function startTimer() {
                 if (timer > 0) {
                     var timeLeft = setInterval(function () {
@@ -123,6 +124,8 @@
                     }, 1000)
                 }
             }
+
+            // Placing a bid 
             $('form').submit(function (e) {
                 // prevents the page from refreshing
                 e.preventDefault();
@@ -131,12 +134,14 @@
                 socket.emit('newBid', newBid);
                 return false;
             });
+
+            // Update details of the winning bid 
             socket.on('bidLeader', function (msg) {
                 $('#bidLeader').html(msg.name);
                 $('#bidHigh').html(msg.amount);
             });
 
-            //
+            // When the auction starts
             socket.on('initAuction', function (msg) {
                 $('#hiddenAuctionContainer').hide();
                 $('#auctionContainer').show();
@@ -147,7 +152,7 @@
 
             });
 
-            // When the winning is decide
+            // When the auction ends, disable bidding and show the winner
             socket.on('winningBid', function (msg) {
                 let soldListingStr = `
                     <div class="col">
@@ -168,6 +173,7 @@
                 $('#auctionContainer').hide();
             });
 
+            // Countdown timer
             socket.on('timer', function (msg) {
                 timer = +msg;
                 startTimer(+msg);
